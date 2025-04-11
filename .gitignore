@@ -1,0 +1,4 @@
+.venv/
+compose.yaml.swp
+app/__pycache__/
+app/*.pyc
