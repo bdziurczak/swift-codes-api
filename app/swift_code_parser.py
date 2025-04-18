@@ -4,8 +4,8 @@ class SwiftCodeParser:
     """
     A class to parse and format SWIFT codes from a CSV file.
     """
-    def __init__(self, FILE_PATH):
-        self.file_path = FILE_PATH
+    def __init__(self):
+        self.file_path = './app/data/Interns_2025_SWIFT_CODES.csv'
         self._df = self._load_and_process()
         
         
