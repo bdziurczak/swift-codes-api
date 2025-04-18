@@ -1,3 +1,4 @@
 fastapi[standard]
-pandas[excel]
-ipykernel
+pandas
+psycopg[binary]
+sqlalchemy

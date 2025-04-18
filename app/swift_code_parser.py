@@ -4,13 +4,14 @@ class SwiftCodeParser:
     """
     A class to parse and format SWIFT codes from a CSV file.
     """
-    def __init__(self, FILE_PATH='./data/Interns_2025_SWIFT_CODES.csv'):
+    def __init__(self, FILE_PATH):
         self.file_path = FILE_PATH
         self._df = self._load_and_process()
         
         
     def _load_and_process(self) -> pd.DataFrame:
         df = pd.read_csv(self.file_path)
+        
         df = self._identify_headquarters(df)
         self._format_codes(df)
         return df
@@ -32,18 +33,19 @@ class SwiftCodeParser:
         df.loc[:, 'COUNTRY NAME'].str.upper()
         
         columns_to_keep = [
-            'COUNTRY ISO2 CODE',
-            'SWIFT CODE', 
-            'NAME', 
             'ADDRESS', 
+            'NAME',
+            'COUNTRY ISO2 CODE',
+            'COUNTRY NAME',
+            'ISHQ',
+            'SWIFT CODE', 
             'HQ SWIFT CODE', 
-            'ISHQ', 
-            'TIME ZONE'
         ]
 
         df = df[columns_to_keep]
+        return df
     
-    async def get_df(self) -> pd.DataFrame:
+    def get_df(self) -> pd.DataFrame:
         """
         Asynchronously retrieves the DataFrame associated with the instance.
         Returns:

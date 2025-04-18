@@ -3,9 +3,27 @@ services:
     build: .
     ports:
       - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
     develop:
       watch:
         - action: sync
           path: .
           target: /code
-
+  db:
+    image: postgres
+    restart: always
+    env_file:
+    - ./env/database.env    
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "swift_api_db"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
