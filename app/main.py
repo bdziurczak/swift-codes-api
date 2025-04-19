@@ -24,7 +24,15 @@ async def read_root():
 
 @app.get("/v1/swift_codes/{swift_code}")
 async def read_swift_code(swift_code: str):
-    res = db_conn.get_swift_code(swift_code)
+    res = await db_conn.get_data_by_swift_code(swift_code)
+    if res:
+        return res
+    else:
+        return Response(status_code=404, content="SWIFT code not found.")
+    
+@app.get("/v1/swift_codes/country/{countryISO2code}")
+async def read_swift_code_by_country(countryISO2code: str):
+    res = await db_conn.get_data_by_country(countryISO2code)
     if res:
         return res
     else:
