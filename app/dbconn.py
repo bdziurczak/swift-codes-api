@@ -1,9 +1,7 @@
 from sqlalchemy import text, create_engine
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine
 from .swift_code_parser import SwiftCodeParser
 import os
-from dotenv import load_dotenv
-from pathlib import Path
 
 class DBConn:
     def __init__(self):
@@ -112,17 +110,21 @@ class DBConn:
             country_name = await connection.execute(query, {'countryISO2code':countryISO2code})
             swift_codes = await connection.execute(query1, {'countryISO2code':countryISO2code})
             try:
-                if not country_name or not swift_codes:
+                country_scalar = country_name.scalar()
+                swift_code_rows = swift_codes.fetchall()
+                if not country_scalar or not swift_code_rows:
                     raise ValueError("No data found for the given country code.")
-                
-                rows = {'countryISO2': countryISO2code, 'countryName': country_name.scalar() if country_name else None}
-                rows["swiftCodes"] = [dict(zip(branch_column_names, row)) for row in swift_codes]
-                
+                rows = {
+                    "countryISO2": countryISO2code, 
+                    "countryName": country_scalar,
+                    "swiftCodes": [dict(zip(branch_column_names, row)) for row in swift_code_rows]
+                    }
                 return rows
             except ValueError as e:
                 return {"error": str(e)}
             except Exception as e:
                 return {"error": "An unexpected error occurred.", "details": str(e)}    
+            
     async def add_swift_code_entry(self, request: dict, required_fields: set[str]) -> dict:
         async with self.get_aconnection() as connection:
             try:
@@ -155,7 +157,8 @@ class DBConn:
                 return {"message": "SWIFT code entry added successfully."}
             except Exception as e:
                 return {"error": "Failed to add SWIFT code entry.", "details": str(e)}
-    async def delete_swift_code_entry(self, swift_code: str):    
+            
+    async def delete_swift_code_entry(self, swift_code: str) -> bool:    
         try:
             # Delete the SWIFT code entry from the swift_codes table
             query = text('''
@@ -166,10 +169,7 @@ class DBConn:
                 result = await connection.execute(query, {'swiftCode': swift_code})
                 await connection.commit()
 
-                if result.rowcount == 0:
-                    raise ValueError("No SWIFT code entry found for the given SWIFT code.")
-
-                return {"message": "SWIFT code entry deleted successfully."}
+                return result.rowcount > 0
         except ValueError as e:
             return {"error": str(e)}
         except Exception as e:

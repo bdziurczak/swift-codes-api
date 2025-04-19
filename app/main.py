@@ -1,8 +1,10 @@
 from fastapi import FastAPI, Response
+from fastapi.responses import JSONResponse
 from .dbconn import DBConn
 from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import HTTPException
+from fastapi.testclient import TestClient
 
 db_conn = DBConn()
 
@@ -27,15 +29,15 @@ async def read_swift_code(swift_code: str):
     if res:
         return res
     else:
-        return Response(status_code=404, content="SWIFT code not found.")
+        return JSONResponse(status_code=404, content={"error": "SWIFT code not found."})
     
 @app.get("/v1/swift-codes/country/{countryISO2code}")
 async def read_swift_code_by_country(countryISO2code: str):
     res = await db_conn.get_data_by_country(countryISO2code)
-    if res:
-        return res
-    else:
-        return Response(status_code=404, content="SWIFT code not found.")
+    if "error" in res:
+        return JSONResponse(status_code=404, content=res)
+    return res
+    
 @app.post("/v1/swift-codes")
 async def add_swift_code(data: dict):
         #Country Name data is ommitted because it is not needed to retrieve country name for given entity from db
@@ -50,6 +52,6 @@ async def add_swift_code(data: dict):
 async def delete_swift_code(swift_code: str):
     deleted = await db_conn.delete_swift_code_entry(swift_code)
     if deleted:
-        return {"message": "SWIFT code deleted successfully."}
+        return {"message": "SWIFT code entry deleted successfully."}
     else:
         raise HTTPException(status_code=404, detail="SWIFT code not found.")

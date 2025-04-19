@@ -25,8 +25,6 @@ python -m venv .venv
 source .venv/bin/activate        # macOS/Linux
 
 .venv\Scripts\activate           # Windows
-
-pip install -r requirements.txt
 ```
 
 ### 3. Run project
@@ -45,3 +43,5 @@ docker compose up --build
 API Documentation is available at http://localhost:8080/docs
 
 ### 5. Testing
+
+Tests are run automatically when you build project using docker compose

@@ -3,3 +3,5 @@ pandas
 psycopg[binary]
 sqlalchemy
 python-dotenv
+pytest
+httpx
