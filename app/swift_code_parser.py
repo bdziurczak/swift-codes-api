@@ -41,8 +41,9 @@ class SwiftCodeParser:
             'SWIFT CODE', 
             'HQ SWIFT CODE', 
         ]
-
+        
         df = df[columns_to_keep]
+        df = df.apply(lambda x: x.str.strip() if x.dtype == "string" else x)
         return df
     
     def get_df(self) -> pd.DataFrame:
