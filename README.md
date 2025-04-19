@@ -40,3 +40,8 @@ To relaunch project run:
 docker compose down -v
 docker compose up --build
 ``` 
+### 4. Documentation
+
+API Documentation is available at http://localhost:8080/docs
+
+### 5. Testing

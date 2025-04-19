@@ -73,8 +73,10 @@ class DBConn:
             
             rows = [dict(zip(branch_column_names, row)) for row in result]
                 
-            if rows:
-                #differentiate between headquarter and branch
+            try:
+                if not rows:
+                    raise ValueError("No data found for the given SWIFT code.")
+                # Differentiate between headquarter and branch
                 is_headquarter = rows[0].get("isHeadquarter")
                 if is_headquarter:
                     subquery = text('''
@@ -88,8 +90,10 @@ class DBConn:
                     branches_list = [dict(zip(branch_column_names, branch)) for branch in branches]
                     rows[0]["branches"] = branches_list
                 return rows[0]
-            else:
-                return "No data found for the given SWIFT code."
+            except ValueError as e:
+                return {"error": str(e)}
+            except Exception as e:
+                return {"error": "An unexpected error occurred.", "details": str(e)}
             
     async def get_data_by_country(self, countryISO2code: str) -> list[dict]:
         branch_column_names = ["address", "bankName", "countryISO2", "countryName", "isHeadquarter", "swiftCode"]
@@ -107,12 +111,16 @@ class DBConn:
             ''')
             country_name = await connection.execute(query, {'countryISO2code':countryISO2code})
             swift_codes = await connection.execute(query1, {'countryISO2code':countryISO2code})
-            if country_name and swift_codes:
+            try:
+                if not country_name or not swift_codes:
+                    raise ValueError("No data found for the given country code.")
+                
                 rows = {'countryISO2': countryISO2code, 'countryName': country_name.scalar() if country_name else None}
                 rows["swiftCodes"] = [dict(zip(branch_column_names, row)) for row in swift_codes]
-            if rows:
+                
                 return rows
-            else:
-                return "No data found for the given country code."
-        pass     
+            except ValueError as e:
+                return {"error": str(e)}
+            except Exception as e:
+                return {"error": "An unexpected error occurred.", "details": str(e)}    
     
