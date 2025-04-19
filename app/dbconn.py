@@ -123,4 +123,54 @@ class DBConn:
                 return {"error": str(e)}
             except Exception as e:
                 return {"error": "An unexpected error occurred.", "details": str(e)}    
-    
+    async def add_swift_code_entry(self, request: dict, required_fields: set[str]) -> dict:
+        async with self.get_aconnection() as connection:
+            try:
+            #Insert the new SWIFT code entry into the swift_codes table
+                query = text('''
+                    INSERT INTO swift_codes ("ADDRESS", "NAME", "COUNTRY ISO2 CODE", "ISHQ", "SWIFT CODE")
+                    VALUES (:address, :bankName, :countryISO2, :isHeadquarter, :swiftCode)
+                ''')
+                await connection.execute(query, {field: request[field] for field in required_fields})
+                await connection.commit()
+
+                # Check if the country already exists in the country_data table
+                country_query = text('''
+                    SELECT 1 FROM country_data
+                    WHERE "COUNTRY ISO2 CODE" = :countryISO2
+                ''')
+                result = await connection.execute(country_query, {'countryISO2': request["countryISO2"]})
+                if not result.scalar():
+                    # Insert the country data if it doesn't exist
+                    country_insert = text('''
+                    INSERT INTO country_data ("COUNTRY ISO2 CODE", "COUNTRY NAME")
+                    VALUES (:countryISO2, :countryName)
+                    ''')
+                    await connection.execute(country_insert, {
+                    'countryISO2': request["countryISO2"],
+                    'countryName': request["countryName"]
+                    })
+                    await connection.commit()
+
+                return {"message": "SWIFT code entry added successfully."}
+            except Exception as e:
+                return {"error": "Failed to add SWIFT code entry.", "details": str(e)}
+    async def delete_swift_code_entry(self, swift_code: str):    
+        try:
+            # Delete the SWIFT code entry from the swift_codes table
+            query = text('''
+            DELETE FROM swift_codes
+            WHERE "SWIFT CODE" = UPPER(:swiftCode)
+            ''')
+            async with self.get_aconnection() as connection:
+                result = await connection.execute(query, {'swiftCode': swift_code})
+                await connection.commit()
+
+                if result.rowcount == 0:
+                    raise ValueError("No SWIFT code entry found for the given SWIFT code.")
+
+                return {"message": "SWIFT code entry deleted successfully."}
+        except ValueError as e:
+            return {"error": str(e)}
+        except Exception as e:
+            return {"error": "Failed to delete SWIFT code entry.", "details": str(e)}
